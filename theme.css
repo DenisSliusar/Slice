@@ -1,0 +1,128 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Button } from "./ui/button";
+import { motion } from "motion/react";
+import { TrendingUp, TrendingDown, Target } from "lucide-react";
+
+interface CategoryInsightDialogProps {
+  open: boolean;
+  onClose: () => void;
+  accountId: string;
+  accountName: string;
+  balance: number;
+  budget: number;
+  icon?: React.ReactNode;
+  color: string;
+  spendingHistory: number;
+}
+
+export function CategoryInsightDialog({
+  open,
+  onClose,
+  accountName,
+  balance,
+  budget,
+  icon,
+  color,
+  spendingHistory,
+}: CategoryInsightDialogProps) {
+  const spendingPercentage = (spendingHistory / budget) * 100;
+  const balancePercentage = (balance / budget) * 100;
+  const trend = spendingHistory > budget * 0.7 ? "high" : spendingHistory < budget * 0.3 ? "low" : "normal";
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md backdrop-blur-2xl bg-white/90 dark:bg-gray-900/90 border-white/50 dark:border-gray-700/50 rounded-3xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl flex items-center gap-2">
+            <div className={color}>{icon}</div>
+            {accountName}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6 mt-4">
+          {/* Balance Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-6 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl"
+          >
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Текущий баланс</p>
+            <p className="text-4xl font-bold text-gray-900 dark:text-gray-100">
+              {balance.toLocaleString('ru-RU')} ₽
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              из {budget.toLocaleString('ru-RU')} ₽ бюджета
+            </p>
+          </motion.div>
+
+          {/* Spending Stats */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-800 rounded-2xl">
+              <span className="text-gray-600 dark:text-gray-400">Потрачено всего</span>
+              <span className="font-bold text-gray-900 dark:text-gray-100">
+                {spendingHistory.toLocaleString('ru-RU')} ₽
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-800 rounded-2xl">
+              <span className="text-gray-600 dark:text-gray-400">Процент бюджета</span>
+              <span className="font-bold text-gray-900 dark:text-gray-100">
+                {spendingPercentage.toFixed(1)}%
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-800 rounded-2xl">
+              <span className="text-gray-600 dark:text-gray-400">Остаток баланса</span>
+              <span className="font-bold text-gray-900 dark:text-gray-100">
+                {balancePercentage.toFixed(1)}%
+              </span>
+            </div>
+          </div>
+
+          {/* Insight */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className={`p-4 rounded-2xl ${
+              trend === "high"
+                ? "bg-red-100 dark:bg-red-900/30"
+                : trend === "low"
+                ? "bg-green-100 dark:bg-green-900/30"
+                : "bg-blue-100 dark:bg-blue-900/30"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              {trend === "high" ? (
+                <TrendingUp className="h-5 w-5 text-red-600 dark:text-red-400 mt-1" />
+              ) : trend === "low" ? (
+                <TrendingDown className="h-5 w-5 text-green-600 dark:text-green-400 mt-1" />
+              ) : (
+                <Target className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-1" />
+              )}
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                  {trend === "high" && "Высокие расходы"}
+                  {trend === "low" && "Отличная экономия"}
+                  {trend === "normal" && "Нормальный уровень"}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {trend === "high" && "Рассмотрите сокращение расходов в этой категории"}
+                  {trend === "low" && "Вы отлично контролируете расходы!"}
+                  {trend === "normal" && "Продолжайте поддерживать баланс"}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          <Button
+            onClick={onClose}
+            className="w-full rounded-2xl h-12 font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+          >
+            Закрыть
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

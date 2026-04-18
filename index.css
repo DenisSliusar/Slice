@@ -1,0 +1,179 @@
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
+import { Button } from "./ui/button";
+import { Slider } from "./ui/slider";
+import { motion, AnimatePresence } from "motion/react";
+import { Sparkles, Coffee, Dumbbell, ShoppingCart, User } from "lucide-react";
+
+interface AIDistributionSliderProps {
+  open: boolean;
+  onClose: () => void;
+  onDistribute: (distributions: { accountId: string; amount: number }[]) => void;
+  totalAmount: number;
+  accounts: { id: string; name: string }[];
+  spendingHistory: { [key: string]: number };
+}
+
+export function AIDistributionSlider({
+  open,
+  onClose,
+  onDistribute,
+  totalAmount,
+  accounts,
+  spendingHistory,
+}: AIDistributionSliderProps) {
+  const [distributions, setDistributions] = useState<{ [key: string]: number }>({});
+  const [autoMode, setAutoMode] = useState(true);
+
+  const categoryAccounts = accounts.filter(
+    (acc) => acc.id !== "main" && acc.id !== "savings"
+  );
+
+  const icons: { [key: string]: any } = {
+    personal: User,
+    coffee: Coffee,
+    gym: Dumbbell,
+    supermarket: ShoppingCart,
+  };
+
+  useEffect(() => {
+    if (open && autoMode) {
+      // AI auto-distribution based on spending history
+      const total = Object.values(spendingHistory).reduce((a, b) => a + b, 0);
+      const newDist: { [key: string]: number } = {};
+      
+      categoryAccounts.forEach((acc) => {
+        const spending = spendingHistory[acc.id] || 0;
+        const percentage = total > 0 ? spending / total : 0.25;
+        newDist[acc.id] = Math.round(totalAmount * percentage);
+      });
+      
+      setDistributions(newDist);
+    }
+  }, [open, autoMode, totalAmount]);
+
+  const handleSliderChange = (accountId: string, value: number[]) => {
+    setDistributions((prev) => ({ ...prev, [accountId]: value[0] }));
+  };
+
+  const handleSubmit = () => {
+    const dist = categoryAccounts.map((acc) => ({
+      accountId: acc.id,
+      amount: distributions[acc.id] || 0,
+    }));
+    onDistribute(dist);
+    onClose();
+  };
+
+  const totalDistributed = Object.values(distributions).reduce((a, b) => a + b, 0);
+  const remaining = totalAmount - totalDistributed;
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-2xl backdrop-blur-2xl bg-white/90 dark:bg-gray-900/90 border-white/50 dark:border-gray-700/50 rounded-3xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-purple-600" />
+            AI Распределение
+          </DialogTitle>
+          <DialogDescription>
+            Умное распределение средств по категориям
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6 mt-4">
+          <div className="flex items-center justify-between p-4 bg-purple-100 dark:bg-purple-900/30 rounded-2xl">
+            <span className="font-medium text-gray-900 dark:text-gray-100">Режим автопилота</span>
+            <Button
+              variant={autoMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => setAutoMode(!autoMode)}
+              className="rounded-xl"
+            >
+              {autoMode ? "Включён" : "Выключен"}
+            </Button>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {categoryAccounts.map((account, index) => {
+              const Icon = icons[account.id];
+              const percentage = totalAmount > 0 ? ((distributions[account.id] || 0) / totalAmount) * 100 : 0;
+              
+              return (
+                <motion.div
+                  key={account.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ 
+                    type: "spring",
+                    stiffness: 350,
+                    damping: 28,
+                    delay: index * 0.05 
+                  }}
+                  className="space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {Icon && <Icon className="h-5 w-5 text-gray-600 dark:text-gray-400" />}
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{account.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                        {(distributions[account.id] || 0).toLocaleString('ru-RU')} ₽
+                      </span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                        ({percentage.toFixed(0)}%)
+                      </span>
+                    </div>
+                  </div>
+                  <Slider
+                    value={[distributions[account.id] || 0]}
+                    onValueChange={(value) => handleSliderChange(account.id, value)}
+                    max={totalAmount}
+                    step={100}
+                    disabled={autoMode}
+                    className="w-full"
+                  />
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+
+          <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-2xl">
+            <div className="flex justify-between mb-2">
+              <span className="text-gray-600 dark:text-gray-400">Итого распределено:</span>
+              <span className="font-bold text-gray-900 dark:text-gray-100">
+                {totalDistributed.toLocaleString('ru-RU')} ₽
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Остаток:</span>
+              <span className={`font-bold ${remaining < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                {remaining.toLocaleString('ru-RU')} ₽
+              </span>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="flex-1 rounded-2xl h-12 font-semibold"
+            >
+              Отмена
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={remaining < 0 || totalDistributed === 0}
+              className="flex-1 rounded-2xl h-12 font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            >
+              Распределить
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

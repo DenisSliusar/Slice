@@ -1,0 +1,95 @@
+import { createContext, useContext, useState, ReactNode } from "react";
+
+type Language = "ru" | "en";
+
+interface Translations {
+  [key: string]: {
+    ru: string;
+    en: string;
+  };
+}
+
+const translations: Translations = {
+  appTitle: { ru: "Slice", en: "Slice" },
+  smartBudget: { ru: "Умное управление бюджетом", en: "Smart Budget Management" },
+  totalBalance: { ru: "Общий баланс", en: "Total Balance" },
+  mainAccount: { ru: "Основной счёт", en: "Main Account" },
+  personalPurchases: { ru: "Личные покупки", en: "Personal Purchases" },
+  coffee: { ru: "Кофе", en: "Coffee" },
+  training: { ru: "Тренировки", en: "Training" },
+  supermarket: { ru: "Супермаркет", en: "Supermarket" },
+  savings: { ru: "Накопления", en: "Savings" },
+  topUp: { ru: "Пополнить", en: "Top Up" },
+  ai: { ru: "AI", en: "AI" },
+  transfer: { ru: "Перевод", en: "Transfer" },
+  qr: { ru: "QR", en: "QR" },
+  nfc: { ru: "NFC", en: "NFC" },
+  smartRounder: { ru: "Smart Rounder", en: "Smart Rounder" },
+  smartRounderDesc: { ru: "5-10% от покупок → накопления", en: "5-10% from purchases → savings" },
+  smartRounderOn: { ru: "Smart Rounder включён", en: "Smart Rounder enabled" },
+  smartRounderOff: { ru: "Smart Rounder отключён", en: "Smart Rounder disabled" },
+  smartRounderOnDesc: { ru: "Процент от покупок будет отправляться в накопления", en: "Percentage from purchases will go to savings" },
+  smartRounderOffDesc: { ru: "Накопления отключены", en: "Savings disabled" },
+  cardNumber: { ru: "Номер карты", en: "Card Number" },
+  validUntil: { ru: "Действует до", en: "Valid Until" },
+  spendingCategories: { ru: "Категории расходов", en: "Spending Categories" },
+  smartDivision: { ru: "Умное разделение счетов", en: "Smart Account Division" },
+  appleWallet: { ru: "Apple Wallet", en: "Apple Wallet" },
+  addToWallet: { ru: "Добавить в Wallet", en: "Add to Wallet" },
+  addSliceCard: { ru: "Добавьте Slice карту в Apple Wallet", en: "Add Slice card to Apple Wallet" },
+  transactionHistory: { ru: "История транзакций", en: "Transaction History" },
+  noTransactions: { ru: "Пока нет транзакций", en: "No transactions yet" },
+  insufficientFunds: { ru: "Недостаточно средств", en: "Insufficient funds" },
+  insufficientFundsDesc: { ru: "На счёте недостаточно средств", en: "Insufficient funds in account" },
+  transferCompleted: { ru: "Перевод выполнен", en: "Transfer completed" },
+  transferredTo: { ru: "переведено на", en: "transferred to" },
+  accountReplenished: { ru: "Счёт пополнен", en: "Account replenished" },
+  added: { ru: "Добавлено", en: "Added" },
+  aiDistributed: { ru: "🤖 AI распределил средства", en: "🤖 AI distributed funds" },
+  autoDistributed: { ru: "автоматически распределено", en: "automatically distributed" },
+  sbpPaymentCompleted: { ru: "СБП платёж выполнен", en: "SBP payment completed" },
+  sent: { ru: "отправлено", en: "sent" },
+  saved: { ru: "Накоплено", en: "Saved" },
+  sentViaSbp: { ru: "отправлено через СБП", en: "sent via SBP" },
+  paymentCompleted: { ru: "Оплата выполнена", en: "Payment completed" },
+  deducted: { ru: "списано", en: "deducted" },
+  deductedFrom: { ru: "списано с", en: "deducted from" },
+  transferFor: { ru: "Перевод для", en: "Transfer for" },
+  openTransferDialog: { ru: "Откройте диалог перевода для", en: "Open transfer dialog for" },
+};
+
+interface LanguageContextType {
+  language: Language;
+  toggleLanguage: () => void;
+  t: (key: string) => string;
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(
+  undefined
+);
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguage] = useState<Language>("ru");
+
+  const toggleLanguage = () => {
+    setLanguage((prev) => (prev === "ru" ? "en" : "ru"));
+  };
+
+  const t = (key: string): string => {
+    return translations[key]?.[language] || key;
+  };
+
+  return (
+    <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error("useLanguage must be used within a LanguageProvider");
+  }
+  return context;
+}

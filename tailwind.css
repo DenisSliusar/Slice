@@ -1,0 +1,78 @@
+import { motion } from "motion/react";
+import { Sparkles } from "lucide-react";
+
+interface MaryWidgetProps {
+  onClick: () => void;
+  financialHealth: "good" | "warning" | "critical";
+}
+
+export function MaryWidget({ onClick, financialHealth }: MaryWidgetProps) {
+  const getColor = () => {
+    switch (financialHealth) {
+      case "good": return "from-green-500 to-emerald-600";
+      case "warning": return "from-yellow-500 to-orange-600";
+      case "critical": return "from-red-500 to-rose-600";
+    }
+  };
+
+  const getMessage = () => {
+    switch (financialHealth) {
+      case "good": return "Отличный баланс! 💰";
+      case "warning": return "Следите за расходами 👀";
+      case "critical": return "Внимание к бюджету! ⚠️";
+    }
+  };
+
+  return (
+    <motion.div
+      className="fixed bottom-6 right-6 z-50"
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ 
+        y: [0, -4, 0],
+        opacity: 1 
+      }}
+      transition={{ 
+        y: {
+          duration: 2,
+          repeat: Infinity,
+          ease: "easeInOut"
+        },
+        opacity: {
+          duration: 0.5
+        }
+      }}
+    >
+      <motion.button
+        onClick={onClick}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        className={`relative p-4 rounded-full bg-gradient-to-br ${getColor()} shadow-2xl`}
+      >
+        {/* Pulse ring */}
+        <motion.div
+          className={`absolute inset-0 rounded-full bg-gradient-to-br ${getColor()} opacity-75`}
+          animate={{
+            scale: [1, 1.5],
+            opacity: [0.75, 0]
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeOut"
+          }}
+        />
+        
+        <Sparkles className="h-6 w-6 text-white relative z-10" />
+        
+        {/* Tooltip */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileHover={{ opacity: 1, y: 0 }}
+          className="absolute bottom-full right-0 mb-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-2xl whitespace-nowrap shadow-lg"
+        >
+          {getMessage()}
+        </motion.div>
+      </motion.button>
+    </motion.div>
+  );
+}
